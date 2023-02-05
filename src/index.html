@@ -4,7 +4,7 @@
 <head></head>
 <body>
   <h1>GAPI with GIS async/await</h1>
-  <button id="showEventsBtn" onclick="showEvents();">Show Drive</button><br><br>
+  <button id="saveFileBtn" onclick="putFile('hi.txt', 'hi there');">Save to Drive</button><br><br>
   <button id="revokeBtn" onclick="revokeToken();">Revoke access token</button>
 
   <script>
@@ -21,7 +21,7 @@
     var tokenClient;
 
     (async () => {
-      document.getElementById("showEventsBtn").style.visibility="hidden";
+      document.getElementById("saveFileBtn").style.visibility="hidden";
       document.getElementById("revokeBtn").style.visibility="hidden";
 
       // First, load and initialize the gapi.client
@@ -53,7 +53,7 @@
         }
       });
 
-      document.getElementById("showEventsBtn").style.visibility="visible";
+      document.getElementById("saveFileBtn").style.visibility="visible";
       document.getElementById("revokeBtn").style.visibility="visible";
     })();
 
@@ -94,8 +94,21 @@
       .then(driveAPIResponse => console.log(JSON.stringify(driveAPIResponse)))
       .catch(err  => getToken(err))  // for authorization errors obtain an access token
       .then(retry => gapi.client.drive.files.list())
-      .then(driveAPIResponse => console.log(driveAPIResponse))
+      .then(driveAPIResponse => console.log(driveAPIResponse))  
       .catch(err  => console.log(err));   // cancelled by user, timeout, etc.
+    }
+
+    async function putFile(name='hello.txt', body='hello world', mimeType='text/plain') {
+      try {
+        var fileList = await gapi.client.drive.files.list();
+      }
+      catch(err) {
+        await getToken(err);
+      }
+      var response = await gapi.client.drive.files.create({name: name, mimeType: mimeType, fields: 'id'});
+      var updateResponse = await gapi.client.request({path: '/upload/drive/v3/files/' + response.result.id, 
+        method: 'PATCH', params: {uploadType: 'media'}, body: body});
+      return updateResponse.result.id;
     }
 
     function revokeToken() {
