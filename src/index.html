@@ -5,9 +5,13 @@
 <body>
   <h1>GAPI with GIS async/await</h1>
   <button id="saveFileBtn" onclick="putFile('hi.txt', 'hi there');">Save to Drive</button><br><br>
+  <button id="loadFileBtn" onclick="getFile('hi.txt')">Load from Drive</button>
+  <div id="fileContents"></div><br><br>
   <button id="revokeBtn" onclick="revokeToken();">Revoke access token</button>
 
   <script>
+
+    var fileId;  // Top-level variable to store the file id created by Google Drive
 
     const gapiLoadPromise = new Promise((resolve, reject) => {
       gapiLoadOkay = resolve;
@@ -98,17 +102,27 @@
       .catch(err  => console.log(err));   // cancelled by user, timeout, etc.
     }
 
-    async function putFile(name='hello.txt', body='hello world', mimeType='text/plain') {
+    async function putFile(name, body, mimeType='text/plain') {
       try {
         var fileList = await gapi.client.drive.files.list();
       }
       catch(err) {
         await getToken(err);
       }
-      var response = await gapi.client.drive.files.create({name: name, mimeType: mimeType, fields: 'id'});
+
+      // Write to Google Drive
+      var response = await gapi.client.drive.files.create({name: name, mimeType: mimeType});
+      console.log(response.result);
+      fileId = response.result.id;  // Store the file id in a top-level variable
       var updateResponse = await gapi.client.request({path: '/upload/drive/v3/files/' + response.result.id, 
         method: 'PATCH', params: {uploadType: 'media'}, body: body});
       return updateResponse.result.id;
+    }
+
+    async function getFile() {
+      // Use the fileId top-level variable to fetch the file id created by putFile
+      var response = await gapi.client.drive.files.get({fileId: fileId, alt: 'media'});
+      document.getElementById('fileContents').innerText = response.body;
     }
 
     function revokeToken() {
