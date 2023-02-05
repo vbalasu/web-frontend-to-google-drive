@@ -1,10 +1,12 @@
 {
-  "name": "save-to-google-drive",
+  "name": "web-frontend-to-google-drive",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "python3 -m http.server",
+    "deploy": "export AWS_PROFILE=vbalasu_admin && aws s3 cp src/index.html s3://cloudmatica/web-frontend-to-google-drive/index.html --acl public-read" 
   },
   "keywords": [],
   "author": "",
